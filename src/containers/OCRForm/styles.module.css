@@ -1,0 +1,27 @@
+
+.container {
+  margin: 50px auto 0px;
+  width: 400px;
+  height: 500px;
+  border: 1px solid #cecece;
+  border-radius: 4px;
+}
+
+.formField {
+  height: 50px;
+  margin: 5px 0px;
+  padding: 0px 10px;
+  border-bottom: 1px solid #cecece;
+}
+
+.formField input {
+  display: inline-block;
+  min-width: 250px;
+  height: 40px;
+  padding-left: 5px;
+  outline-color: deepskyblue;
+}
+
+.form {
+
+}
