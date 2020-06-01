@@ -9,34 +9,19 @@ export interface IBaseFormProps {
   submitting: boolean;
   pristine: boolean;
 }
-export const BaseForm: React.FC<FormRenderProps> = ({ handleSubmit, form, submitting, pristine }) => {
+
+export const BaseForm: React.FC<FormRenderProps> = (props) => {
 
   return (
-    <form onSubmit={handleSubmit} >
-      <div className={styles.formField}>
-        <Field name='firstName' component='input' placeholder='Firstname' />
-      </div>
-      <div className={styles.formField}>
-        <Field name='lastName' component='input' placeholder='Lastname' />
-      </div>
-      <div className={styles.formField}>
-        <Field name='dob' component='input' type='date' placeholder='Date of birth' />
-      </div>
-      <div className={styles.formField}>
-        <Field name='docNo' component='input' placeholder='Document number' />
-      </div>
-      <div>
-        <button type='submit' disabled={submitting}>
-          Submit
-        </button>
-        <button
-          type='button'
-          onClick={form.reset}
-          disabled={submitting || pristine}
-        >
-          Reset
-        </button>
-      </div>
+    <form className={styles.baseForm} >
+      <Field name='firstName' title='Firstname' component='input' placeholder='Firstname' />
+      <Field name='lastName' component='input' placeholder='Lastname' />
+      <Field name='dob' component='input' placeholder='Date of birth' />
+      <Field name='docNo' component='input' placeholder='Document number' />
+      <Field name='expirationDate' component='input' placeholder='Expiration date' />
+      <Field name='oib' component='input' placeholder='OIB' />
+      <Field name='gender' component='input' placeholder='Gender' />
+      <Field name='nationality' component='input' placeholder='Nationality' />
     </form>
   );
 }

@@ -1,45 +1,60 @@
 import * as React from 'react';
 import { Form } from 'react-final-form';
 
+import { parseMRZ } from '../../utils/mrz';
 import { BaseForm } from './component/BaseForm';
-import { FileInput } from './component/FileInput';
+import { Scanner } from './component/Scanner';
 
 import styles from './styles.module.css';
 
-const url = 'https://api.microblink.com/recognize/execute​';
-const apiSecret = '4943ce8e-21b5-4c82-808c-7f80c0ccbe87';
-const apiKey = '197d408f3ac34985a7fb7e7926c56f9d';
-const token = 'Bearer MTk3ZDQwOGYzYWMzNDk4NWE3ZmI3ZTc5MjZjNTZmOWQ6NDk0M2NlOGUtMjFiNS00YzgyLTgwOGMtN2Y4MGMwY2NiZTg3';
+interface IState {
+  fields: {
+    dob: string;
+    firstName: string;
+    lastName: string;
+    oib: string;
+    gender: string;
+    nationality: string;
+    docNo: string;
+    expirationDate: string;
+  }
+}
 
-export class OCRForm extends React.Component<any> {
+export class OCRForm extends React.Component<{}, IState> {
 
   render() {
     return (
       <div className={styles.container}>
-        <FileInput onFilesSelected={this.onFileSelected} />
+        <Scanner onResultReady={this.onScanResultReady} onError={this.onScanError} />
         <br/>
-        <Form component={BaseForm} onSubmit={this.onSubmit} />
+        <Form component={BaseForm} onSubmit={this.onSubmit} initialValues={this.state?.fields} />
       </div>
-
     )
   }
 
-  private onFileSelected = async (files: string[]) => {
-    console.log(files);
-    const response = await fetch(url, {
-      method: 'POST',
-      body: files[0],
-      headers: {
-        Authorization: token,
+  private onScanResultReady = (results: any) => {
+    console.log(results);
+    const result = results.data && results.data[0] && results.data[0].result;
+    const mrzStr = result.rawMRZString;
+    const { doc, personal, identification } = parseMRZ(mrzStr);
+
+    this.setState({
+      fields: {
+        dob: personal.dob.value,
+        oib: doc.oib!,
+        expirationDate: personal.expirationDate.value,
+        firstName: identification.secondary,
+        lastName: identification.primary,
+        gender: personal.gender,
+        nationality: personal.nationality,
+        docNo: doc.docNo,
       }
     });
-
-    const body = await response.json();
-
-    console.log(body);
   }
 
-  private onSubmit = () => {
-
+  private onScanError = (event: any) => {
+    console.log(event);
   }
+
+  private onSubmit = () => undefined;
 }

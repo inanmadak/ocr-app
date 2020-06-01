@@ -1,14 +1,17 @@
 import * as React from 'react';
 import {
-  DropzoneRootProps,
   useDropzone,
   DropzoneProps,
 } from 'react-dropzone';
 
 import styles from '../styles.module.css';
 
+/**
+ * Was gonna use Dropzone for uploading, then decided to use Microblink web component
+ */
+
 export interface FileInputProps extends DropzoneProps {
-  onFilesSelected: (files: string[]) => void;
+  onFilesSelected: (files: File[]) => void;
 }
 
 const fileNames = (arr: File[]) => arr.map((file) => file.name);
