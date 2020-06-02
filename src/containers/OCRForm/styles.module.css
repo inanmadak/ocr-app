@@ -26,11 +26,17 @@
 }
 
 .colRight {
+  padding-top: 8px;
   display: inline-block;
   width: 40%;
   vertical-align: top;
 }
-/* 
+
+.error {
+  color: orangered;
+  padding: 0px 10px;
+}
+/*
 microblink-ui-web {
   --mb-widget-font-family: 'Avenir Next';
   --mb-hem: 20px;

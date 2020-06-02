@@ -5,3 +5,5 @@ export const SCANNER_AUTH_TOKEN = `Bearer ${btoa(apiKey + ':' + apiSecret)}`;
 
 export const SCANNER_RECOGNIZERS = ['MRTD'];
 
+export const GENERAL_ERROR_MESSAGE = 'There was problem scanning the image, make sure you uploaded the back photo of your ID.';
+

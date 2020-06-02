@@ -10,3 +10,7 @@ export const NATIONALITY_RANGE: Range = [15, 3];
 // Index constants
 export const GENDER_INDEX = 7;
 export const DOC_OPTIONAL_INDEX = 5;
+
+export const MACHINE_PLACEHOLDER = '<';
+export const IDENTIFIER_GROUP_SEPARATOR = '<<';
+export const HUMAN_SEPARATOR = ' ';

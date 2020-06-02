@@ -7,13 +7,16 @@ import {
   NATIONALITY_RANGE,
   TYPE_STATE_CODE_RANGE,
   DOC_OPTIONAL_INDEX,
+  IDENTIFIER_GROUP_SEPARATOR,
+  MACHINE_PLACEHOLDER,
+  HUMAN_SEPARATOR,
 } from './constants';
 import {
   IDocInfo,
   IIdentificationInfo,
   IMRZInfo,
   IPersonalInfo,
-} from './interfaces';
+} from './interface';
 
 const alphabetHashMap = () => {
   const map: Map<string, number> = new Map();
@@ -27,11 +30,11 @@ const alphabetHashMap = () => {
   return map;
 }
 
-const extractParts = (text: string) =>
-  text
-    .replace(/<+$/g, '<')
-    .replace(/</g, ' ')
-    .split(' ')
+const extractParts = (mrzLine: string) =>
+  mrzLine
+    .replace(/<+$/g, MACHINE_PLACEHOLDER)
+    .replace(/</g, HUMAN_SEPARATOR)
+    .split(HUMAN_SEPARATOR)
     .filter(identity);
 
 const getLines = (mrzRaw: string) => mrzRaw.split('\n');
@@ -128,11 +131,14 @@ const parseMiddleLine = (mrzMiddleLine: string): IPersonalInfo => {
 }
 
 const parseLowerLine = (mrzLowerLine: string): IIdentificationInfo => {
-  const identification = extractParts(mrzLowerLine);
+  const [rawPrimary, rawSecondary] = mrzLowerLine.split(IDENTIFIER_GROUP_SEPARATOR);
+
+  let primary = extractParts(rawPrimary).join(HUMAN_SEPARATOR);
+  let secondary = extractParts(rawSecondary).join(HUMAN_SEPARATOR);
 
   return {
-    primary: identification[0],
-    secondary: identification.slice(1).join(' '),
+    primary,
+    secondary
   }
 }
 
