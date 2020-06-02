@@ -1,14 +1,22 @@
 import * as React from 'react';
 import { Form } from 'react-final-form';
 
-import { parseMRZ } from '../../utils/mrz';
+import { MRZUtil } from 'utils/mrz';
+import { IMRZInfo } from 'utils/mrz/interfaces';
+
 import { BaseForm } from './component/BaseForm';
 import { Scanner } from './component/Scanner';
+import {
+  SCANNER_AUTH_TOKEN,
+  SCANNER_RECOGNIZERS,
+} from './constants';
 
 import styles from './styles.module.css';
+import { printValidation } from './herlpers';
 
 interface IState {
-  fields: {
+  parsedMRZ: IMRZInfo;
+  initialValues: {
     dob: string;
     firstName: string;
     lastName: string;
@@ -23,23 +31,48 @@ interface IState {
 export class OCRForm extends React.Component<{}, IState> {
 
   render() {
+    const { personal, validated } = (this.state && this.state.parsedMRZ) || {};
     return (
       <div className={styles.container}>
-        <Scanner onResultReady={this.onScanResultReady} onError={this.onScanError} />
-        <br/>
-        <Form component={BaseForm} onSubmit={this.onSubmit} initialValues={this.state?.fields} />
+        <Scanner
+          recognizers={SCANNER_RECOGNIZERS}
+          onResultReady={this.onScanResultReady}
+          onError={this.onScanError}
+          token={SCANNER_AUTH_TOKEN}
+        />
+        <div className={styles.colLeft}>
+          <Form
+            component={BaseForm}
+            initialValues={this.state?.initialValues}
+            onSubmit={this.onSubmit}
+          />
+        </div>
+        <div className={styles.colRight}>
+          Field Validations
+          {
+            this.state?.parsedMRZ
+              ? (
+                <>
+                  <div>DOB: {printValidation(personal.dob.validated)}</div>
+                  <div>Expiration Date: {printValidation(personal.dob.validated)}</div>
+                  <div>Composite CD: {printValidation(validated)}</div>
+                </>
+              )
+              : null
+          }
+        </div>
       </div>
     )
   }
 
   private onScanResultReady = (results: any) => {
-    console.log(results);
     const result = results.data && results.data[0] && results.data[0].result;
     const mrzStr = result.rawMRZString;
-    const { doc, personal, identification } = parseMRZ(mrzStr);
+    const parsedMRZ = MRZUtil.parseMRZ(mrzStr);
+    const { doc, personal, identification } = MRZUtil.parseMRZ(mrzStr);
 
     this.setState({
-      fields: {
+      initialValues: {
         dob: personal.dob.value,
         oib: doc.oib!,
         expirationDate: personal.expirationDate.value,
@@ -48,7 +81,8 @@ export class OCRForm extends React.Component<{}, IState> {
         gender: personal.gender,
         nationality: personal.nationality,
         docNo: doc.docNo,
-      }
+      },
+      parsedMRZ
     });
   }
 

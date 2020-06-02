@@ -1,37 +1,19 @@
-import { identity } from './common';
-
-interface IValidateableField {
-  value: string;
-  validated: boolean;
-}
-
-interface IDocInfo {
-  typeAndStateCodes: string;
-  docNo: string;
-  oib?: string;
-}
-
-interface IPersonalInfo {
-  dob: IValidateableField;
-  gender: string;
-  expirationDate: IValidateableField;
-  nationality: string;
-  optional?: string;
-}
-
-interface IIdentificationInfo {
-  primary: string;
-  secondary: string;
-}
-
-export interface IMRZInfo {
-  doc: IDocInfo;
-  personal: IPersonalInfo;
-  identification: IIdentificationInfo;
-  validated: boolean;
-}
-
-type Range = [number, (number | undefined)];
+import { identity } from '../common';
+import {
+  DATE_VALUE_RANGE,
+  DOB_RANGE,
+  EXPIRY_DATE_RANGE,
+  GENDER_INDEX,
+  NATIONALITY_RANGE,
+  TYPE_STATE_CODE_RANGE,
+  DOC_OPTIONAL_INDEX,
+} from './constants';
+import {
+  IDocInfo,
+  IIdentificationInfo,
+  IMRZInfo,
+  IPersonalInfo,
+} from './interfaces';
 
 const alphabetHashMap = () => {
   const map: Map<string, number> = new Map();
@@ -56,29 +38,16 @@ const getLines = (mrzRaw: string) => mrzRaw.split('\n');
 
 const getValidateableComposition = (rawMrz: string) => {
   const [upperLine, middleLine] = getLines(rawMrz);
-  const upperLineNormalized = upperLine.slice(5);
+  const upperLineNormalized = upperLine.slice(DOC_OPTIONAL_INDEX);
   const middleLineNormalized = middleLine.replace(/[^0-9<,.]+/g, '')
-
-  console.log(upperLineNormalized);
-  console.log(middleLineNormalized);
 
   // join lines for calculation of composite check digit
   return upperLineNormalized.concat(middleLineNormalized);
 }
 
-// Range constants
-const TYPE_STATE_CODE_RANGE: Range = [0, 5];
-const DOB_RANGE: Range = [0, 7];
-const DATE_VALUE_RANGE: Range = [0, 6];
-const EXPIRY_DATE_RANGE: Range = [8, 7];
-const NATIONALITY_RANGE: Range = [15, 3];
-
-// Index constants
-const GENDER_INDEX = 7;
-
 /**
  * Validates a string with check digit by comparing calculated digit value with what is recorded in the string.
- * @param text A string with check digit at the end.
+ * @param text A machine readable string with check digit at the end.
  */
 const validateCheckDigit = (text: string) => {
   const charMap = alphabetHashMap();
@@ -110,18 +79,12 @@ const validateCheckDigit = (text: string) => {
   return String(calculatedCheckDIgit) === checkDigit;
 }
 
-const validateCompositeCheckDigit = (rawMrz: string) => {
-  const validated = validateCheckDigit(getValidateableComposition(rawMrz));
-  console.log(validated);
-
-  return validated;
-}
+const validateCompositeCheckDigit = (rawMrz: string) => validateCheckDigit(getValidateableComposition(rawMrz));
 
 const parseUpperLine = (mrzUpperLine: string): IDocInfo => {
-  const parts = extractParts(mrzUpperLine);
-  const [docInfo, oib] = parts;
-  const typeAndStateCodes = docInfo.substr.apply(docInfo, TYPE_STATE_CODE_RANGE);
-  const docNo = docInfo.substr(5);
+  const typeAndStateCodes = mrzUpperLine.substr.apply(mrzUpperLine, TYPE_STATE_CODE_RANGE);
+  const parts = extractParts(mrzUpperLine.slice(DOC_OPTIONAL_INDEX));
+  const [docNo, oib] = parts;
 
   return {
     typeAndStateCodes,
@@ -173,10 +136,8 @@ const parseLowerLine = (mrzLowerLine: string): IIdentificationInfo => {
   }
 }
 
-export const parseMRZ = (mrzStr: string): IMRZInfo => {
+const parseMRZ = (mrzStr: string): IMRZInfo => {
   const [upperLine, middleLine, lowerLine] = getLines(mrzStr);
-
-  validateCompositeCheckDigit(mrzStr);
 
   return {
     doc: parseUpperLine(upperLine),
@@ -185,3 +146,7 @@ export const parseMRZ = (mrzStr: string): IMRZInfo => {
     validated: validateCompositeCheckDigit(mrzStr),
   };
 }
+
+export const MRZUtil = {
+  parseMRZ
+};
