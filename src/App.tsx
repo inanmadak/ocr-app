@@ -1,10 +1,12 @@
 import * as React from 'react';
+
+import { OCRForm } from './containers/OCRForm';
+
 import './App.css';
-import { OCRForm } from './containers/OCRForm/OCRForm';
 
 function App() {
   return (
-    <div className="App">
+    <div className='App'>
      <OCRForm />
     </div>
   );

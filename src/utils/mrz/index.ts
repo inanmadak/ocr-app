@@ -8,8 +8,11 @@ import {
   TYPE_STATE_CODE_RANGE,
   DOC_OPTIONAL_INDEX,
   IDENTIFIER_GROUP_SEPARATOR,
-  MACHINE_PLACEHOLDER,
   HUMAN_SEPARATOR,
+  TYPE_RANGE,
+  STATE_CODE_RANGE,
+  DIGIT_PLACEHOLDER_ONLY_RGX,
+  MACHINE_PLACEHOLDER_RGX,
 } from './constants';
 import {
   IDocInfo,
@@ -32,8 +35,8 @@ const alphabetHashMap = () => {
 
 const extractParts = (mrzLine: string) =>
   mrzLine
-    .replace(/<+$/g, MACHINE_PLACEHOLDER)
-    .replace(/</g, HUMAN_SEPARATOR)
+    // .replace(/<+$/g, MACHINE_PLACEHOLDER)
+    .replace(MACHINE_PLACEHOLDER_RGX, HUMAN_SEPARATOR)
     .split(HUMAN_SEPARATOR)
     .filter(identity);
 
@@ -42,7 +45,7 @@ const getLines = (mrzRaw: string) => mrzRaw.split('\n');
 const getValidateableComposition = (rawMrz: string) => {
   const [upperLine, middleLine] = getLines(rawMrz);
   const upperLineNormalized = upperLine.slice(DOC_OPTIONAL_INDEX);
-  const middleLineNormalized = middleLine.replace(/[^0-9<,.]+/g, '')
+  const middleLineNormalized = middleLine.replace(DIGIT_PLACEHOLDER_ONLY_RGX, '')
 
   // join lines for calculation of composite check digit
   return upperLineNormalized.concat(middleLineNormalized);
@@ -84,13 +87,19 @@ const validateCheckDigit = (text: string) => {
 
 const validateCompositeCheckDigit = (rawMrz: string) => validateCheckDigit(getValidateableComposition(rawMrz));
 
+/** Parsers */
+
 const parseUpperLine = (mrzUpperLine: string): IDocInfo => {
-  const typeAndStateCodes = mrzUpperLine.substr.apply(mrzUpperLine, TYPE_STATE_CODE_RANGE);
+  const typeAndStateCodes = mrzUpperLine.substr(...TYPE_STATE_CODE_RANGE);
+  const type = typeAndStateCodes.substr(...TYPE_RANGE).replace(MACHINE_PLACEHOLDER_RGX, '');
+  const stateCode = typeAndStateCodes.substr(...STATE_CODE_RANGE).replace(MACHINE_PLACEHOLDER_RGX, '');;
+
   const parts = extractParts(mrzUpperLine.slice(DOC_OPTIONAL_INDEX));
   const [docNo, oib] = parts;
 
   return {
-    typeAndStateCodes,
+    type,
+    stateCode,
     docNo,
     oib
   };
@@ -98,30 +107,30 @@ const parseUpperLine = (mrzUpperLine: string): IDocInfo => {
 
 const parseMiddleLine = (mrzMiddleLine: string): IPersonalInfo => {
   const parts = extractParts(mrzMiddleLine);
-  let demographics, optional;
+  let personal, optional;
 
   if (parts.length > 2) {
-    [demographics, optional] = parts;
+    [personal, optional] = parts;
   } else {
-    [demographics] = parts;
+    [personal] = parts;
   }
 
-  const dob = demographics.substr.apply(demographics, DOB_RANGE);
-  const gender = demographics[GENDER_INDEX];
-  const expirationDate = demographics.substr.apply(demographics, EXPIRY_DATE_RANGE);
-  const nationality = demographics.substr.apply(demographics, NATIONALITY_RANGE);
+  const dob = personal.substr(...DOB_RANGE);
+  const gender = personal[GENDER_INDEX];
+  const expirationDate = personal.substr(...EXPIRY_DATE_RANGE);
+  const nationality = personal.substr(...NATIONALITY_RANGE);
 
   const dobValidation = validateCheckDigit(dob);
   const expirationDateValidation = validateCheckDigit(expirationDate);
 
   return {
     dob: {
-      value: dob.substr.apply(dob, DATE_VALUE_RANGE),
+      value: dob.substr(...DATE_VALUE_RANGE),
       validated: dobValidation,
     },
     gender,
     expirationDate: {
-      value: expirationDate.substr.apply(expirationDate, DATE_VALUE_RANGE),
+      value: expirationDate.substr(...DATE_VALUE_RANGE),
       validated: expirationDateValidation
     },
     nationality,
@@ -133,8 +142,8 @@ const parseMiddleLine = (mrzMiddleLine: string): IPersonalInfo => {
 const parseLowerLine = (mrzLowerLine: string): IIdentificationInfo => {
   const [rawPrimary, rawSecondary] = mrzLowerLine.split(IDENTIFIER_GROUP_SEPARATOR);
 
-  let primary = extractParts(rawPrimary).join(HUMAN_SEPARATOR);
-  let secondary = extractParts(rawSecondary).join(HUMAN_SEPARATOR);
+  const primary = extractParts(rawPrimary).join(HUMAN_SEPARATOR);
+  const secondary = extractParts(rawSecondary).join(HUMAN_SEPARATOR);
 
   return {
     primary,

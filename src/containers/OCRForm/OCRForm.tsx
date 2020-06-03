@@ -11,7 +11,7 @@ import {
   SCANNER_RECOGNIZERS,
   GENERAL_ERROR_MESSAGE,
 } from './constants';
-import { printValidation } from './herlpers';
+import { printValidation } from './helpers';
 
 import styles from './styles.module.css';
 
@@ -26,6 +26,8 @@ interface IState {
     nationality: string;
     docNo: string;
     expirationDate: string;
+    type: string;
+    stateCode: string;
   },
   error?: string;
 }
@@ -57,6 +59,20 @@ export class OCRForm extends React.Component<{}, IState> {
     )
   }
 
+  private renderValidations = () => {
+    const { personal, validated } =  this.state?.parsedMRZ || {};
+
+    return this.state?.parsedMRZ
+      ? (
+        <>
+          <div>DOB: {printValidation(personal.dob.validated)}</div>
+          <div>Expiration Date: {printValidation(personal.dob.validated)}</div>
+          <div>Composite CD: {printValidation(validated)}</div>
+        </>
+      )
+      : null;
+  }
+
   private onScanResultReady = (results: any) => {
     try {
       const result = results.data && results.data[0] && results.data[0].result;
@@ -74,15 +90,16 @@ export class OCRForm extends React.Component<{}, IState> {
           gender: personal.gender,
           nationality: personal.nationality,
           docNo: doc.docNo,
+          type: doc.type,
+          stateCode: doc.stateCode,
         },
         parsedMRZ,
         error: undefined,
       });
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       this.setState({ error: GENERAL_ERROR_MESSAGE });
     }
-
   }
 
   private onScanError = (event: IObjectAny) => {
@@ -90,18 +107,4 @@ export class OCRForm extends React.Component<{}, IState> {
   }
 
   private onSubmit = () => undefined;
-
-  private renderValidations = () => {
-    const { personal, validated } = (this.state && this.state.parsedMRZ) || {};
-
-    return this.state?.parsedMRZ
-      ? (
-        <>
-          <div>DOB: {printValidation(personal.dob.validated)}</div>
-          <div>Expiration Date: {printValidation(personal.dob.validated)}</div>
-          <div>Composite CD: {printValidation(validated)}</div>
-        </>
-      )
-      : null;
-  }
 }

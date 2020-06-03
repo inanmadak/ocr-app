@@ -1,10 +1,13 @@
+export type Range = [number, (number | undefined)];
+
 interface IValidateableField {
   value: string;
   validated: boolean;
 }
 
 export interface IDocInfo {
-  typeAndStateCodes: string;
+  type: string;
+  stateCode: string;
   docNo: string;
   oib?: string;
 }
