@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import 'microblink/dist/microblink.min';
+
 import './index.css';
 
 import App from './App';

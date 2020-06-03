@@ -1,19 +1,26 @@
-import { identity } from '../common';
 import {
-  DATE_VALUE_RANGE,
   DOB_RANGE,
+  DOCNO_STARTING_INDEX,
   EXPIRY_DATE_RANGE,
   GENDER_INDEX,
-  NATIONALITY_RANGE,
-  TYPE_STATE_CODE_RANGE,
-  DOC_OPTIONAL_INDEX,
-  IDENTIFIER_GROUP_SEPARATOR,
   HUMAN_SEPARATOR,
-  TYPE_RANGE,
-  STATE_CODE_RANGE,
-  DIGIT_PLACEHOLDER_ONLY_RGX,
+  IDENTIFIER_GROUP_SEPARATOR,
   MACHINE_PLACEHOLDER_RGX,
+  NATIONALITY_RANGE,
+  STATE_CODE_RANGE,
+  TYPE_RANGE,
+  TYPE_STATE_CODE_RANGE,
+  CD_WEIGHTERS,
+  DOCNO_MAX_LENGTH,
+  DATE_VALUE_RANGE,
+  EMPTY,
 } from './constants';
+import {
+  alphabetHashMap,
+  extractParts,
+  getLines,
+  getValidateableComposition,
+} from './helpers';
 import {
   IDocInfo,
   IIdentificationInfo,
@@ -21,43 +28,12 @@ import {
   IPersonalInfo,
 } from './interface';
 
-const alphabetHashMap = () => {
-  const map: Map<string, number> = new Map();
-  let fl = 'A'.charCodeAt(0);
-  const ll = 'Z'.charCodeAt(0);
-
-  for (let numValue = 10; fl <= ll; fl++, numValue++) {
-    map.set(String.fromCharCode(fl), numValue);
-  }
-
-  return map;
-}
-
-const extractParts = (mrzLine: string) =>
-  mrzLine
-    // .replace(/<+$/g, MACHINE_PLACEHOLDER)
-    .replace(MACHINE_PLACEHOLDER_RGX, HUMAN_SEPARATOR)
-    .split(HUMAN_SEPARATOR)
-    .filter(identity);
-
-const getLines = (mrzRaw: string) => mrzRaw.split('\n');
-
-const getValidateableComposition = (rawMrz: string) => {
-  const [upperLine, middleLine] = getLines(rawMrz);
-  const upperLineNormalized = upperLine.slice(DOC_OPTIONAL_INDEX);
-  const middleLineNormalized = middleLine.replace(DIGIT_PLACEHOLDER_ONLY_RGX, '')
-
-  // join lines for calculation of composite check digit
-  return upperLineNormalized.concat(middleLineNormalized);
-}
-
 /**
  * Validates a string with check digit by comparing calculated digit value with what is recorded in the string.
  * @param text A machine readable string with check digit at the end.
  */
 const validateCheckDigit = (text: string) => {
   const charMap = alphabetHashMap();
-  const weighters = [7, 3, 1];
   const multiplications: number[] = [];
   const checkDigit = text.slice(-1);
   let weighterIndex = 0;
@@ -69,10 +45,10 @@ const validateCheckDigit = (text: string) => {
 
     if (isNaN(integer)) {
       multiplications.push(
-        charMap.has(char) ? (charMap.get(char) as number) * weighters[weighterIndex] : 0
+        charMap.has(char) ? (charMap.get(char) as number) * CD_WEIGHTERS[weighterIndex] : 0
       );
     } else {
-      multiplications.push(integer * weighters[weighterIndex]);
+      multiplications.push(integer * CD_WEIGHTERS[weighterIndex]);
     }
 
     weighterIndex = weighterIndex === 2 ? 0 : weighterIndex + 1;
@@ -88,19 +64,29 @@ const validateCheckDigit = (text: string) => {
 const validateCompositeCheckDigit = (rawMrz: string) => validateCheckDigit(getValidateableComposition(rawMrz));
 
 /** Parsers */
-
 const parseUpperLine = (mrzUpperLine: string): IDocInfo => {
   const typeAndStateCodes = mrzUpperLine.substr(...TYPE_STATE_CODE_RANGE);
-  const type = typeAndStateCodes.substr(...TYPE_RANGE).replace(MACHINE_PLACEHOLDER_RGX, '');
-  const stateCode = typeAndStateCodes.substr(...STATE_CODE_RANGE).replace(MACHINE_PLACEHOLDER_RGX, '');;
+  const type = typeAndStateCodes.substr(...TYPE_RANGE).replace(MACHINE_PLACEHOLDER_RGX, EMPTY);
+  const stateCode = typeAndStateCodes.substr(...STATE_CODE_RANGE).replace(MACHINE_PLACEHOLDER_RGX, EMPTY);;
 
-  const parts = extractParts(mrzUpperLine.slice(DOC_OPTIONAL_INDEX));
-  const [docNo, oib] = parts;
+  const parts = extractParts(mrzUpperLine.slice(DOCNO_STARTING_INDEX));
+
+  let [docNo, oib] = parts;
+  let docNoValidation: boolean;
+
+  // see if document no includes check digit
+  if (docNo.length > DOCNO_MAX_LENGTH) {
+    docNoValidation = validateCheckDigit(docNo);
+    docNo = docNo.substr(0, DOCNO_MAX_LENGTH);
+  }
 
   return {
     type,
     stateCode,
-    docNo,
+    docNo: {
+      value: docNo,
+      validated: docNoValidation!
+    },
     oib
   };
 }
@@ -136,7 +122,6 @@ const parseMiddleLine = (mrzMiddleLine: string): IPersonalInfo => {
     nationality,
     optional
   };
-
 }
 
 const parseLowerLine = (mrzLowerLine: string): IIdentificationInfo => {
@@ -163,5 +148,6 @@ const parseMRZ = (mrzStr: string): IMRZInfo => {
 }
 
 export const MRZUtil = {
-  parseMRZ
+  parseMRZ,
+  validateCompositeCheckDigit
 };

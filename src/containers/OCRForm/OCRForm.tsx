@@ -39,9 +39,9 @@ export class OCRForm extends React.Component<{}, IState> {
       <div className={styles.container}>
         <Scanner
           recognizers={SCANNER_RECOGNIZERS}
+          token={SCANNER_AUTH_TOKEN}
           onResultReady={this.onScanResultReady}
           onError={this.onScanError}
-          token={SCANNER_AUTH_TOKEN}
         />
         <div className={styles.error}>{this.state?.error}</div>
         <div className={styles.colLeft}>
@@ -52,7 +52,7 @@ export class OCRForm extends React.Component<{}, IState> {
           />
         </div>
         <div className={styles.colRight}>
-          Check Digit Validations
+          <b>Check Digit Validations</b>
           {this.renderValidations()}
         </div>
       </div>
@@ -60,12 +60,13 @@ export class OCRForm extends React.Component<{}, IState> {
   }
 
   private renderValidations = () => {
-    const { personal, validated } =  this.state?.parsedMRZ || {};
+    const { personal, doc, validated } = this.state?.parsedMRZ || {};
 
     return this.state?.parsedMRZ
       ? (
         <>
-          <div>DOB: {printValidation(personal.dob.validated)}</div>
+          <div>Doc No: {printValidation(doc.docNo.validated)}</div>
+          <div>Date of Birth: {printValidation(personal.dob.validated)}</div>
           <div>Expiration Date: {printValidation(personal.dob.validated)}</div>
           <div>Composite CD: {printValidation(validated)}</div>
         </>
@@ -78,7 +79,7 @@ export class OCRForm extends React.Component<{}, IState> {
       const result = results.data && results.data[0] && results.data[0].result;
       const mrzStr = result.rawMRZString;
       const parsedMRZ = MRZUtil.parseMRZ(mrzStr);
-      const { doc, personal, identification } = MRZUtil.parseMRZ(mrzStr);
+      const { doc, personal, identification } = parsedMRZ;
 
       this.setState({
         initialValues: {
@@ -89,7 +90,7 @@ export class OCRForm extends React.Component<{}, IState> {
           lastName: identification.primary,
           gender: personal.gender,
           nationality: personal.nationality,
-          docNo: doc.docNo,
+          docNo: doc.docNo.value,
           type: doc.type,
           stateCode: doc.stateCode,
         },

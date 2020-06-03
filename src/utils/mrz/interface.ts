@@ -8,7 +8,7 @@ interface IValidateableField {
 export interface IDocInfo {
   type: string;
   stateCode: string;
-  docNo: string;
+  docNo: IValidateableField;
   oib?: string;
 }
 
