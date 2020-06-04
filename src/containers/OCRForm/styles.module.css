@@ -1,27 +1,49 @@
 
 .container {
-  margin: 50px auto 0px;
-  width: 400px;
-  height: 500px;
+  margin: 50px auto 20px;
+  width: 600px;
+  height: fit-content;
   border: 1px solid #cecece;
   border-radius: 4px;
 }
 
-.formField {
-  height: 50px;
-  margin: 5px 0px;
-  padding: 0px 10px;
-  border-bottom: 1px solid #cecece;
+.baseForm {
+  margin: 10px;
 }
 
-.formField input {
+.baseForm label {
+  text-align: left;
+  display: flex;
+}
+
+.baseForm input {
   display: inline-block;
-  min-width: 250px;
+  flex: 6;
   height: 40px;
+  margin: 5px 10px;
   padding-left: 5px;
   outline-color: deepskyblue;
 }
 
-.form {
+.baseForm span {
+  flex: 4;
+  height: 40px;
+  padding-top: 15px;
+}
 
+.colLeft {
+  display: inline-block;
+  width: 60%;
+}
+
+.colRight {
+  padding-top: 8px;
+  display: inline-block;
+  width: 40%;
+  vertical-align: top;
+}
+
+.error {
+  color: orangered;
+  padding: 0px 10px;
 }

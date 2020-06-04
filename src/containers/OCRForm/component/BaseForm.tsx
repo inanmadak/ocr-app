@@ -1,42 +1,55 @@
 import * as React from 'react';
-import { Field, FormRenderProps } from 'react-final-form';
+import {
+  Field,
+  FormRenderProps,
+} from 'react-final-form';
 
 import styles from '../styles.module.css';
 
-export interface IBaseFormProps {
-  handleSubmit: () => void;
-  form: any;
-  submitting: boolean;
-  pristine: boolean;
-}
-export const BaseForm: React.FC<FormRenderProps> = ({ handleSubmit, form, submitting, pristine }) => {
+export const BaseForm: React.FC<FormRenderProps> = ({ handleSubmit }) => {
 
   return (
-    <form onSubmit={handleSubmit} >
-      <div className={styles.formField}>
-        <Field name='firstName' component='input' placeholder='Firstname' />
-      </div>
-      <div className={styles.formField}>
-        <Field name='lastName' component='input' placeholder='Lastname' />
-      </div>
-      <div className={styles.formField}>
-        <Field name='dob' component='input' type='date' placeholder='Date of birth' />
-      </div>
-      <div className={styles.formField}>
-        <Field name='docNo' component='input' placeholder='Document number' />
-      </div>
-      <div>
-        <button type='submit' disabled={submitting}>
-          Submit
-        </button>
-        <button
-          type='button'
-          onClick={form.reset}
-          disabled={submitting || pristine}
-        >
-          Reset
-        </button>
-      </div>
+    <form className={styles.baseForm} onSubmit={handleSubmit}>
+      <label>
+        <span>Firstname</span>
+        <Field name='firstName' component='input' />
+      </label>
+      <label>
+        <span>Lastname</span>
+        <Field name='lastName' component='input' />
+      </label>
+      <label>
+        <span>Date of Birth</span>
+        <Field name='dob' component='input' />
+      </label>
+      <label>
+        <span>Document No</span>
+        <Field name='docNo' component='input' />
+      </label >
+      <label>
+        <span>Document Type</span>
+        <Field name='type' component='input' />
+      </label>
+      <label>
+        <span>Issuing State</span>
+        <Field name='stateCode' component='input' />
+      </label>
+      <label>
+        <span>Expiration Date</span>
+        <Field name='expirationDate' component='input' />
+      </label >
+      <label>
+        <span>OIB</span>
+        <Field name='oib' component='input' />
+      </label >
+      <label>
+        <span>Gender</span>
+        <Field name='gender' component='input' />
+      </label >
+      <label>
+        <span>Nationality</span>
+        <Field name='nationality' component='input' />
+      </label >
     </form>
   );
 }

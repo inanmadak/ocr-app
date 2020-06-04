@@ -1,0 +1,1 @@
+export const printValidation = (value: boolean) => value ? 'Validated' : 'Not Validated';

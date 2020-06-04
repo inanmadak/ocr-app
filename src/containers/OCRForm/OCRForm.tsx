@@ -1,45 +1,111 @@
 import * as React from 'react';
 import { Form } from 'react-final-form';
 
+import { MRZUtil } from 'utils/mrz';
+import { IMRZInfo } from 'utils/mrz/interface';
+
 import { BaseForm } from './component/BaseForm';
-import { FileInput } from './component/FileInput';
+import { Scanner } from './component/Scanner';
+import {
+  SCANNER_AUTH_TOKEN,
+  SCANNER_RECOGNIZERS,
+  GENERAL_ERROR_MESSAGE,
+} from './constants';
+import { printValidation } from './helpers';
 
 import styles from './styles.module.css';
 
-const url = 'https://api.microblink.com/recognize/execute​';
-const apiSecret = '4943ce8e-21b5-4c82-808c-7f80c0ccbe87';
-const apiKey = '197d408f3ac34985a7fb7e7926c56f9d';
-const token = 'Bearer MTk3ZDQwOGYzYWMzNDk4NWE3ZmI3ZTc5MjZjNTZmOWQ6NDk0M2NlOGUtMjFiNS00YzgyLTgwOGMtN2Y4MGMwY2NiZTg3';
+interface IState {
+  parsedMRZ: IMRZInfo;
+  initialValues: {
+    dob: string;
+    firstName: string;
+    lastName: string;
+    oib: string;
+    gender: string;
+    nationality: string;
+    docNo: string;
+    expirationDate: string;
+    type: string;
+    stateCode: string;
+  },
+  error?: string;
+}
 
-export class OCRForm extends React.Component<any> {
+export class OCRForm extends React.Component<{}, IState> {
 
   render() {
     return (
       <div className={styles.container}>
-        <FileInput onFilesSelected={this.onFileSelected} />
-        <br/>
-        <Form component={BaseForm} onSubmit={this.onSubmit} />
+        <Scanner
+          recognizers={SCANNER_RECOGNIZERS}
+          token={SCANNER_AUTH_TOKEN}
+          onResultReady={this.onScanResultReady}
+          onError={this.onScanError}
+        />
+        <div className={styles.error}>{this.state?.error}</div>
+        <div className={styles.colLeft}>
+          <Form
+            component={BaseForm}
+            initialValues={this.state?.initialValues}
+            onSubmit={this.onSubmit}
+          />
+        </div>
+        <div className={styles.colRight}>
+          <b>Check Digit Validations</b>
+          {this.renderValidations()}
+        </div>
       </div>
-
     )
   }
 
-  private onFileSelected = async (files: string[]) => {
-    console.log(files);
-    const response = await fetch(url, {
-      method: 'POST',
-      body: files[0],
-      headers: {
-        Authorization: token,
-      }
-    });
+  private renderValidations = () => {
+    const { personal, doc, validated } = this.state?.parsedMRZ || {};
 
-    const body = await response.json();
-
-    console.log(body);
+    return this.state?.parsedMRZ
+      ? (
+        <>
+          <div>Doc No: {printValidation(doc.docNo.validated)}</div>
+          <div>Date of Birth: {printValidation(personal.dob.validated)}</div>
+          <div>Expiration Date: {printValidation(personal.dob.validated)}</div>
+          <div>Composite CD: {printValidation(validated)}</div>
+        </>
+      )
+      : null;
   }
 
-  private onSubmit = () => {
+  private onScanResultReady = (results: any) => {
+    try {
+      const result = results.data && results.data[0] && results.data[0].result;
+      const mrzStr = result.rawMRZString;
+      const parsedMRZ = MRZUtil.parseMRZ(mrzStr);
+      const { doc, personal, identification } = parsedMRZ;
 
+      this.setState({
+        initialValues: {
+          dob: personal.dob.value,
+          oib: doc.oib!,
+          expirationDate: personal.expirationDate.value,
+          firstName: identification.secondary,
+          lastName: identification.primary,
+          gender: personal.gender,
+          nationality: personal.nationality,
+          docNo: doc.docNo.value,
+          type: doc.type,
+          stateCode: doc.stateCode,
+        },
+        parsedMRZ,
+        error: undefined,
+      });
+    } catch (err) {
+      console.error(err);
+      this.setState({ error: GENERAL_ERROR_MESSAGE });
+    }
   }
+
+  private onScanError = (event: IObjectAny) => {
+    console.error(event);
+  }
+
+  private onSubmit = () => undefined;
 }
