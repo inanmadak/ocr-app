@@ -1,6 +1,6 @@
 # OCR Scanner
 
-I used the web-component on the [https://www.npmjs.com/package/microblink](Microblink package library) to handle uploads and get a response. I wrapped it with a React component and tied props to data types and event handlers. So you just upload the data and get the results.
+I used the web-component on the [Microblink package library](https://www.npmjs.com/package/microblink) to handle uploads and get a response. I wrapped it with a React component and tied props to data types and event handlers. So you just upload the data and get the results.
 
 For parsing the response, I have written a util called mrz, and within that I added my parsers, validators and other helper functions. Even though the task asked for 4 form fields, I am parsing and displaying almost everything in the fields. 
 
