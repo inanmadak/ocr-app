@@ -18,12 +18,18 @@ export const Scanner: React.FC<IScannerProps> = ({ onResultReady, onError, recog
   React.useEffect(
     () => {
       const MicroblinkSDK = window.Microblink.SDK;
+      const el = uiComponent.current;
 
       MicroblinkSDK.SetAuthorization(token);
       MicroblinkSDK.SetRecognizers(recognizers);
 
-      uiComponent.current?.addEventListener('resultReady', resultReady, false);
-      uiComponent.current?.addEventListener('error', onError, false);
+      el?.addEventListener('resultReady', resultReady, false);
+      el?.addEventListener('error', onError, false);
+
+      return () => {
+        el?.removeEventListener('resultReady', resultReady);
+        el?.removeEventListener('error', onError);
+      }
     },
     [uiComponent, resultReady, onError, recognizers, token]
   );
